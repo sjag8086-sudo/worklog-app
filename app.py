@@ -6,11 +6,16 @@ app = Flask(__name__)
 
 FILE_PATH = "Work Log 20260402 主要4機種.xlsx"
 
-# ✅ トップページ（Excel一覧）
+# ✅ トップページ
 @app.route("/", methods=["GET"])
 def excel():
 
-    df = pd.read_excel(FILE_PATH, header=20)
+    df = pd.read_excel(
+        FILE_PATH,
+        header=20,
+        usecols=["SN", "作業日", "作業者", "依頼内容", "作業内容"]  # ✅ 軽量化
+    )
+
     df = df.fillna("")
 
     # ✅ 日付変換
@@ -19,7 +24,7 @@ def excel():
     # ✅ 新しい順
     df = df.sort_values(by="作業日", ascending=False)
 
-    # ✅ 表示用フォーマット
+    # ✅ 表示用
     df["作業日"] = df["作業日"].dt.strftime("%Y-%m-%d")
 
     search = request.args.get("search")
@@ -28,23 +33,24 @@ def excel():
     if search:
         df = df[df["SN"].astype(str).str.contains(search)]
 
-    # ✅ インデックス追加（詳細用）
+    # ✅ インデックス
     df = df.reset_index()
 
-    # ✅ 表示列（重要）
-    df = df[["index", "SN", "作業日", "作業者", "依頼内容", "作業内容"]]
-
-    # ✅ 初期5件
+    # ✅ 5件だけ
     data = df.head(5).to_dict(orient="records")
 
     return render_template("excel.html", data=data)
 
 
-# ✅ 詳細画面
+# ✅ 詳細画面（ここ修正が重要）
 @app.route("/detail/<int:row_id>")
 def detail(row_id):
 
-    df = pd.read_excel(FILE_PATH, header=20)
+    df = pd.read_excel(
+        FILE_PATH,
+        header=20
+    )
+
     df = df.fillna("")
     df = df.reset_index()
 
